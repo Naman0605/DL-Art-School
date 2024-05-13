@@ -15,32 +15,41 @@ hyperparameter. Some cleaners are English-specific. You'll typically want to use
 import re
 from unidecode import unidecode
 from .numbers import normalize_numbers
+from indic_transliteration import sanscript
 
 
 # Regular expression matching whitespace:
 _whitespace_re = re.compile(r'\s+')
 
-# List of (regular expression, replacement) pairs for abbreviations:
-_abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
-  ('mrs', 'misess'),
-  ('mr', 'mister'),
-  ('dr', 'doctor'),
-  ('st', 'saint'),
-  ('co', 'company'),
-  ('jr', 'junior'),
-  ('maj', 'major'),
-  ('gen', 'general'),
-  ('drs', 'doctors'),
-  ('rev', 'reverend'),
-  ('lt', 'lieutenant'),
-  ('hon', 'honorable'),
-  ('sgt', 'sergeant'),
-  ('capt', 'captain'),
-  ('esq', 'esquire'),
-  ('ltd', 'limited'),
-  ('col', 'colonel'),
-  ('ft', 'fort'),
-]]
+# # List of (regular expression, replacement) pairs for abbreviations:
+# _abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
+#   ('mrs', 'misess'),
+#   ('mr', 'mister'),
+#   ('dr', 'doctor'),
+#   ('st', 'saint'),
+#   ('co', 'company'),
+#   ('jr', 'junior'),
+#   ('maj', 'major'),
+#   ('gen', 'general'),
+#   ('drs', 'doctors'),
+#   ('rev', 'reverend'),
+#   ('lt', 'lieutenant'),
+#   ('hon', 'honorable'),
+#   ('sgt', 'sergeant'),
+#   ('capt', 'captain'),
+#   ('esq', 'esquire'),
+#   ('ltd', 'limited'),
+#   ('col', 'colonel'),
+#   ('ft', 'fort'),
+# ]]
+
+_abbreviations = [(re.compile('\\b%s\\.' % x[0]), x[1]) for x in [
+  ('डॉ', 'डॉक्टर'),
+  ('श्री', 'श्रीमान'),
+  ('सुश्री', 'सुश्रीमती'),
+  ('प्रो','प्रोफेसर')
+  ]
+  ]
 
 
 def expand_abbreviations(text):
@@ -50,7 +59,13 @@ def expand_abbreviations(text):
 
 
 def expand_numbers(text):
-  return normalize_numbers(text)
+    # Simple mapping of numbers to their Hindi word equivalents
+    num_to_words = {
+        '1': 'एक', '2': 'दो', '3': 'तीन', '4': 'चार', '5': 'पांच',
+        '6': 'छह', '7': 'सात', '8': 'आठ', '9': 'नौ', '0': 'शून्य'
+    }
+    # Replace digits with words
+    return ''.join(num_to_words.get(char, char) for char in text)
 
 
 def lowercase(text):
@@ -74,18 +89,31 @@ def basic_cleaners(text):
 
 def transliteration_cleaners(text):
   '''Pipeline for non-English text that transliterates to ASCII.'''
-  text = convert_to_ascii(text)
+  # text = convert_to_ascii(text)
   text = lowercase(text)
   text = collapse_whitespace(text)
   return text
 
 
+# def english_cleaners(text):
+#   '''Pipeline for English text, including number and abbreviation expansion.'''
+#   # text = convert_to_ascii(text)
+#   text = lowercase(text)
+#   # text = expand_numbers(text)
+#   text = expand_abbreviations(text)
+#   text = collapse_whitespace(text)
+#   text = text.replace('"', '')
+#   return text
+
 def english_cleaners(text):
   '''Pipeline for English text, including number and abbreviation expansion.'''
-  text = convert_to_ascii(text)
-  text = lowercase(text)
-  text = expand_numbers(text)
-  text = expand_abbreviations(text)
+
+  '''Transliterate Hindi text to Roman script.'''
+  # Specify the input and output scripts
+  input_script = sanscript.DEVANAGARI
+  output_script = sanscript.ITRANS
+  # Transliterate the text
+  text = sanscript.transliterate(text, input_script, output_script)
   text = collapse_whitespace(text)
   text = text.replace('"', '')
   return text
