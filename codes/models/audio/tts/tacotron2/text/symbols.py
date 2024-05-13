@@ -1,6 +1,6 @@
 from models.audio.tts.tacotron2.text import cmudict
 
-pad        = ''
+_pad = '_'
 _punctuation = '|!\'(),.:;? '
 _special = '-'
 _letters = 'अआइईउऊऋएऐओऔकखगघङचछजझञटठडढणतथदधनपफबभमयरलवशषसहक्षज्ञत्रश्रऽािीुूृॄॅॆेैॉॊोौ्ॐ॓॔ॠ'  
